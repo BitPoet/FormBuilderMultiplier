@@ -1,5 +1,5 @@
 # FormBuilderMultiplier
-[ProcessWire](https://processwire.com) module extending [FormBuilder](https://processwire.com/api/modules/form-builder/) to allow multiplying fieldsets in the frontend form
+[ProcessWire](https://processwire.com) module extending [FormBuilder](https://processwire.com/api/modules/form-builder/) commercial module to allow multiplying fieldsets in the frontend form
 
 # Compatiblity
 Compatible with ProcessWire 3.x
