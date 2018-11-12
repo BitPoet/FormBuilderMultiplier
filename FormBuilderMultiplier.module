@@ -25,7 +25,7 @@ class FormBuilderMultiplier extends WireData implements Module {
 		return [
 			'title'		=>	__("FormBuilder Fieldset Multiplier", __FILE__),
 			'summary'	=>	__("Allows Repeater-like multiplying of fieldsets in FormBuilder forms in the frontend", __FILE__),
-			'version'	=>	'0.0.4',
+			'version'	=>	'0.0.5',
 			'requires'	=>	array("FormBuilder"),
 			'autoload'	=>	true,
 		];

@@ -36,8 +36,8 @@ $(document).ready(function() {
 		 * CSS class.
 		 */
 		var $tpl = $('<div/>');
-		$inner.children('div.Inputfield:has(input.fb-multiplier-orig-field)').clone().each(function(ind, fld) {
-			$(fld).find('input').removeClass('fb-multiplier-orig-field');
+		$inner.children('div.Inputfield:has(input.fb-multiplier-orig-field), div.Inputfield:has(select.fb-multiplier-orig-field), div.Inputfield:has(textarea.fb-multiplier-orig-field)').clone().each(function(ind, fld) {
+			$(fld).find('input, select, textarea').removeClass('fb-multiplier-orig-field');
 			$tpl.append(fld);
 		});
 		var rowTpl = $tpl.html();
