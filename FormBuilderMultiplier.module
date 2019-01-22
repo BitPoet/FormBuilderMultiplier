@@ -46,7 +46,18 @@ class FormBuilderMultiplier extends WireData implements Module {
 		$this->addHookBefore("FormBuilderProcessor::populate", $this, "addMultipliedFieldsToPopulate");
 		$this->addHookAfter("FormBuilderProcessor::processInputReady", $this, "addMultipliedFieldsToProcessInput");
 		$this->addHookAfter("FormBuilderProcessor::render", $this, "appendJSConfig");
+		$this->addHookAfter("FormBuilderProcessor::savePageDone", $this, "addMultipliedFieldsToPage");
+		$this->addHookAfter('Page::render', $this, 'addScripts');
 	}
+
+
+    public function addScripts($event) {
+		$page = $event->object; 
+		if($page->template == 'admin') return;
+        $additionalHeadScripts = '<script type="text/javascript" src="'.wire('config')->urls->siteModules.'FormBuilderMultiplier/FormBuilderMultiplier.js"></script>';
+		$event->return = str_replace("</head>", $additionalHeadScripts.'</head>', $event->return); 
+	}
+	
 	
 	/**
 	 * Hook after FormBuilderProcessor::render
@@ -118,22 +129,30 @@ class FormBuilderMultiplier extends WireData implements Module {
 	 */
 	public function addMultipliedFieldsToProcessor(HookEvent $event) {
 		$this->log->save('fbmultiplier', "addMultipliedFieldsToProcessor");
-		$this->config->scripts->append($this->config->urls->{$this->className} . "FormBuilderMultiplier.js?ts=" . strftime('%Y%m%d%H%M%S'));
-		
+		//echo wire('config')->scripts->append(wire('config')->urls->FormBuilderMultiplier . "FormBuilderMultiplier.js?ts=" . strftime('%Y%m%d%H%M%S'));
+		$this->log->save('fbmultiplier', "test");
+
 		$form = $event->arguments(0);
 		
-		$multis = $form->find("className=InputfieldFieldset,multiplyGroup=1");
-		
+		$multis = $form->find("className=InputfieldFieldset,multiplyGroup=1"); //FIND THE FIELDSET
 		foreach($multis as $multi) {
 			$this->log->save('fbmultiplier', "Found multiplier fieldset " . $multi->name);
 			
+
+			// ADD THE CLASS TO THE INPUT FIELD 
+			// CHANGE THE LABEL TO INCLUDE THE COUNT. 
 			$multi->children->each(function($child) {
 				$child->addClass('fb-multiplier-orig-field');
 				if($child->label) $child->label .= " [#1]";
+			    if($child->name) $child->name .= "_1";
+				//if($child->id) $child->id .= "_1";
+				//echo $child->name;
+
 			});
 			
-			$mname = $multi->name;
-			$multiCount = $this->input->post->{$mname . "__multiplier_rows"} ?: 1;
+			$mname = $multi->name; //NAME OF THE FIELDSET
+			$multiCount = $this->input->post->{$mname . "__multiplier_rows"} ?: 1; // COUNT THE CURRENT ROWS
+
 			
 			$children = $multi->children()->getArray();
 
@@ -142,12 +161,14 @@ class FormBuilderMultiplier extends WireData implements Module {
 			$hid->attr('data-multiply-limit', $multi->multiplyLimit);
 			$hid->attr('value', $multiCount);
 			$multi->insertBefore($hid, $multi->children->first());
-			
+
 			if($multiCount && $multiCount > 1) {
 				for($c = 1; $c < $multiCount; $c++) {
 					$this->cloneFields($children, $multi, $c);
 				}
 			}
+
+
 
 			if(! $this->noButtons) {
 				$btn = $this->modules->get("InputfieldMarkup");
@@ -156,6 +177,10 @@ class FormBuilderMultiplier extends WireData implements Module {
 				$btn->attr('value', "<button class='$classes' name='$btnname' data-multiply='$mname' data-multiply-limit='" . intVal($multi->multiplyLimit) . "'>" . $this->_("Add row") . "</button>");
 				$multi->append($btn);
 			}
+
+
+		    $this->log->save('fbmultiplier', "Finished the adjustments " . $multi->name);
+
 		}		
 	}
 	
@@ -204,9 +229,11 @@ class FormBuilderMultiplier extends WireData implements Module {
 			$multi->children->each(function($child) {
 				$child->addClass('fb-multiplier-orig-field');
 				if($child->label) $child->label .= " [#1]";
+				if($child->name) $child->name .= "_1";
 			});
 						
 			$children = $multi->children()->getArray();
+			//print_r($children);
 
 			$hid = $this->modules->get("InputfieldHidden");
 			$hid->attr('id+name', $mname . "__multiplier_rows");
@@ -237,6 +264,42 @@ class FormBuilderMultiplier extends WireData implements Module {
 		$this->addMultipliedFieldsToProcessor($event);
 		$this->noButtons = false;
 	}
+
+
+
+	public function addMultipliedFieldsToPage(HookEvent $event) {
+
+		$form = $event->object->getInputfieldsForm(); 
+		$page = $event->arguments(0); // page that was saved
+		$data = $event->arguments(1); // assoc array of data that was in the form
+		$multis = $form->find("className=InputfieldFieldset,multiplyGroup=1"); //FIND THE FIELDSET
+		$sanitizer = $this->wire('sanitizer');
+
+		foreach($multis as $multi) {
+		
+			$mname = $multi->name; //NAME OF THE FIELDSET
+			$multiCount = $this->input->post->{$mname . "__multiplier_rows"} ?: 1; // COUNT THE CURRENT ROWS
+
+			for($c = 1; $c <= $multiCount; $c++) { //ITERATE THROUGH THE REPEATER ROW
+				${$repFields.'_'.$c} = array();//CREATE AN ARRAY OF 1 REPEATER ROW
+ 
+				foreach ($data as $key => $value) { //ADD THE REPEATER ROW TO THE ARRAY
+		            if(strpos($key,'_'.$c)!==false){
+		            	$newkey = str_replace('_'.$c, '', $key);//REMOVE THE _COUNT
+				        ${$repFields.'_'.$c}[$newkey] = $sanitizer->entities($value); // ADD TO NEW ARRAY
+				    }
+				}
+			//ENTER THEN INTO THE PAGE
+                $rep = $page->$mname->getNew(); //OPEN THE REPEATER
+		            foreach(${$repFields.'_'.$c} as $k => $v){ //ITTERATE THROUGH THE ARRAY
+		            	$rep->$k = $v;
+		            }
+                $rep->save(); //SAVE THE REPEATER
+			} //END FOR
+			
+
+		}
+		
+	}
 	
 }
-
