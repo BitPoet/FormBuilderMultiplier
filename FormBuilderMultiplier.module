@@ -72,7 +72,7 @@ class FormBuilderMultiplier extends WireData implements Module {
 			]
 		];
 		
-		$out .= "<script>var FBMultiplier = " . json_encode($jsconf) . ";</script>\n";
+		$out = "<script>var FBMultiplier = " . json_encode($jsconf) . ";</script>\n";
 		
 		$event->return .= $out;
 	}
