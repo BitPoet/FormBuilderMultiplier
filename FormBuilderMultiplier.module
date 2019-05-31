@@ -102,7 +102,7 @@ class FormBuilderMultiplier extends WireData implements Module {
 		if($event->page->process == 'ProcessFormBuilder') {
 			$f = $this->modules->get("InputfieldCheckbox");
 			$f->attr('name', 'multiplyGroup');
-			$f->label = $this->_("Multiply fields in this set " . rand(1000));
+			$f->label = $this->_("Multiply fields in this set");
 			if($this->editingField->multiplyGroup) $f->attr('checked', 'checked');
 			$f->description = $this->_("If this box is checked, the user will be presented with a button that adds another set of the fields in this field group.") . " " .
 							  $this->_("The field names for each set will get a numeric suffix (e.g. surname_1, surname_2, givenname_1, givenname_2 ...)")
