@@ -136,9 +136,11 @@ class FormBuilderMultiplier extends WireData implements Module {
 		
 		$multis = $form->find("className=InputfieldFieldset,multiplyGroup=1"); //FIND THE FIELDSET
 		foreach($multis as $multi) {
+			// Add class for individual styling to the surrounding fieldset
+			$multi->addClass('fb-multiplier-fieldset');
+
 			$this->log->save('fbmultiplier', "Found multiplier fieldset " . $multi->name);
 			
-
 			// ADD THE CLASS TO THE INPUT FIELD 
 			// CHANGE THE LABEL TO INCLUDE THE COUNT. 
 			$multi->children->each(function($child) {
@@ -223,6 +225,9 @@ class FormBuilderMultiplier extends WireData implements Module {
 		$multis = $form->find("className=InputfieldFieldset,multiplyGroup=1");
 		
 		foreach($multis as $multi) {
+			// Add class for individual styling to the surrounding fieldset
+			$multi->addClass('fb-multiplier-fieldset');
+			
 			$mname = $multi->name;
 			$multiCount = isset($data[$mname . "__multiplier_rows"]) ? $data[$mname . "__multiplier_rows"] : 1;
 			
@@ -276,6 +281,8 @@ class FormBuilderMultiplier extends WireData implements Module {
 		$sanitizer = $this->wire('sanitizer');
 
 		foreach($multis as $multi) {
+			// Add class for individual styling to the surrounding fieldset
+			$multi->addClass('fb-multiplier-fieldset');
 		
 			$mname = $multi->name; //NAME OF THE FIELDSET
 			$multiCount = $this->input->post->{$mname . "__multiplier_rows"} ?: 1; // COUNT THE CURRENT ROWS
