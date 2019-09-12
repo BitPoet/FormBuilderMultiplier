@@ -25,7 +25,7 @@ class FormBuilderMultiplier extends WireData implements Module {
 		return [
 			'title'		=>	__("FormBuilder Fieldset Multiplier", __FILE__),
 			'summary'	=>	__("Allows Repeater-like multiplying of fieldsets in FormBuilder forms in the frontend", __FILE__),
-			'version'	=>	'0.0.6',
+			'version'	=>	'0.0.7',
 			'requires'	=>	array("FormBuilder"),
 			'autoload'	=>	true,
 		];
@@ -54,7 +54,7 @@ class FormBuilderMultiplier extends WireData implements Module {
     public function addScripts($event) {
 		$page = $event->object; 
 		if($page->template == 'admin') return;
-        $additionalHeadScripts = '<script type="text/javascript" src="'.wire('config')->urls->siteModules.'FormBuilderMultiplier/FormBuilderMultiplier.js"></script>';
+        $additionalHeadScripts = '<script type="text/javascript" src="' . wire('config')->urls->{$this->className()} . 'FormBuilderMultiplier.js"></script>';
 		$event->return = str_replace("</head>", $additionalHeadScripts.'</head>', $event->return); 
 	}
 	
