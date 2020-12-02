@@ -25,7 +25,7 @@ class FormBuilderMultiplier extends WireData implements Module {
 		return [
 			'title'		=>	__("FormBuilder Fieldset Multiplier", __FILE__),
 			'summary'	=>	__("Allows Repeater-like multiplying of fieldsets in FormBuilder forms in the frontend", __FILE__),
-			'version'	=>	'0.0.7',
+			'version'	=>	'0.0.8',
 			'requires'	=>	array("FormBuilder"),
 			'autoload'	=>	true,
 		];
@@ -115,6 +115,17 @@ class FormBuilderMultiplier extends WireData implements Module {
 			$f->label = $this->_("Multiplication limit");
 			$f->attr('value', $this->editingField->multiplyLimit ?: 0);
 			$f->description = $this->_("Limit the number of possibile multiplications of this fieldset's fields. 0 (default) means unlimited.");
+			$f->columnWidth = 50;
+			$f->showIf = "multiplyGroup=1";
+			
+			$event->return->append($f);
+			
+			$f = $this->modules->get("InputfieldText");
+			$f->attr('name', 'multiplyLabel');
+			$f->label = $this->_("Label");
+			$f->attr('value', $this->editingField->multiplyLabel ?: 'Add row');
+			$f->description = $this->_("Label of button to add a new role.");
+			$f->columnWidth = 50;
 			$f->showIf = "multiplyGroup=1";
 			
 			$event->return->append($f);
@@ -176,7 +187,7 @@ class FormBuilderMultiplier extends WireData implements Module {
 				$btn = $this->modules->get("InputfieldMarkup");
 				$classes = "uk-button uk-button-small uk-button-primary fb-multiplier-add-row";
 				$btnname = "btn_multiy__$mname";
-				$btn->attr('value', "<button class='$classes' name='$btnname' data-multiply='$mname' data-multiply-limit='" . intVal($multi->multiplyLimit) . "'>" . $this->_("Add row") . "</button>");
+				$btn->attr('value', "<button class='$classes' name='$btnname' data-multiply='$mname' data-multiply-limit='" . intVal($multi->multiplyLimit) . "'>" . $multi->multiplyLabel . "</button>");
 				$multi->append($btn);
 			}
 
