@@ -124,7 +124,7 @@ class FormBuilderMultiplier extends WireData implements Module {
 			$f->attr('name', 'multiplyLabel');
 			$f->label = $this->_("Label");
 			$f->attr('value', $this->editingField->multiplyLabel ?: 'Add row');
-			$f->description = $this->_("Label of button to add a new role.");
+			$f->description = $this->_("Label of button to add a new row.");
 			$f->columnWidth = 50;
 			$f->showIf = "multiplyGroup=1";
 			
