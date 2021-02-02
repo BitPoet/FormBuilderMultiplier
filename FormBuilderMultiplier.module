@@ -25,7 +25,7 @@ class FormBuilderMultiplier extends WireData implements Module {
 		return [
 			'title'		=>	__("FormBuilder Fieldset Multiplier", __FILE__),
 			'summary'	=>	__("Allows Repeater-like multiplying of fieldsets in FormBuilder forms in the frontend", __FILE__),
-			'version'	=>	'0.0.8',
+			'version'	=>	'0.0.9',
 			'requires'	=>	array("FormBuilder"),
 			'autoload'	=>	true,
 		];
@@ -115,18 +115,41 @@ class FormBuilderMultiplier extends WireData implements Module {
 			$f->label = $this->_("Multiplication limit");
 			$f->attr('value', $this->editingField->multiplyLimit ?: 0);
 			$f->description = $this->_("Limit the number of possibile multiplications of this fieldset's fields. 0 (default) means unlimited.");
-			$f->columnWidth = 50;
+			$f->columnWidth = 25;
 			$f->showIf = "multiplyGroup=1";
 			
 			$event->return->append($f);
-			
+
+			$f = $this->modules->get("InputfieldText");
+			$f->attr('name', 'rowHead');
+			$f->label = $this->_("Headline for rows");
+			$f->attr('value', $this->editingField->rowHead ?: 'Row');
+			$f->description = $this->_("Headline for single rows.");
+			$f->columnWidth = 25;
+			$f->showIf = "multiplyGroup=1";
+			$f->useLanguages = true;
+
+			$event->return->append($f);
+
 			$f = $this->modules->get("InputfieldText");
 			$f->attr('name', 'multiplyLabel');
-			$f->label = $this->_("Label");
+			$f->label = $this->_("Label \"Add row\"");
 			$f->attr('value', $this->editingField->multiplyLabel ?: 'Add row');
-			$f->description = $this->_("Label of button to add a new role.");
-			$f->columnWidth = 50;
+			$f->description = $this->_("Label of button to add a new row.");
+			$f->columnWidth = 25;
 			$f->showIf = "multiplyGroup=1";
+			$f->useLanguages = true;
+
+			$event->return->append($f);
+
+			$f = $this->modules->get("InputfieldText");
+			$f->attr('name', 'removeLabel');
+			$f->label = $this->_("Label \"Delete row\"");
+			$f->attr('value', $this->editingField->removeLabel ?: 'Delete row');
+			$f->description = $this->_("Label of button to delete the last row.");
+			$f->columnWidth = 25;
+			$f->showIf = "multiplyGroup=1";
+			$f->useLanguages = true;
 			
 			$event->return->append($f);
 		}
@@ -139,6 +162,15 @@ class FormBuilderMultiplier extends WireData implements Module {
 	 * the form input.
 	 */
 	public function addMultipliedFieldsToProcessor(HookEvent $event) {
+
+		// Multi Language Support
+		if ($this->wire('languages')) {
+			$userLanguage = $this->wire('user')->language;
+			$lang = $userLanguage->isDefault() ? '' : "$userLanguage->id";
+		} else {
+			$lang = '';
+		}
+
 		$this->log->save('fbmultiplier', "addMultipliedFieldsToProcessor");
 		//echo wire('config')->scripts->append(wire('config')->urls->FormBuilderMultiplier . "FormBuilderMultiplier.js?ts=" . strftime('%Y%m%d%H%M%S'));
 		$this->log->save('fbmultiplier', "test");
@@ -147,21 +179,35 @@ class FormBuilderMultiplier extends WireData implements Module {
 		
 		$multis = $form->find("className=InputfieldFieldset,multiplyGroup=1"); //FIND THE FIELDSET
 		foreach($multis as $multi) {
+
+			// Skip if form is allready processed
+			$preventDuplicates = ($multi->hasClass('fb-multiplier-fieldset')) ? true : false;
+
 			// Add class for individual styling to the surrounding fieldset
 			$multi->addClass('fb-multiplier-fieldset');
 
-			$this->log->save('fbmultiplier', "Found multiplier fieldset " . $multi->name);
+			// Add Headline 
+			$rowHead = $multi->get('rowHead'.$lang);
+
+			
+			$info = $this->modules->get("InputfieldMarkup");
+			$info->attr('name','rowHead');
+			$info->attr('value','<hr>');
+			$info->addClass('fb-multiplier-orig-field label fb-multiplier-label uk-margin-remove');
+			$info->label($rowHead);
+			$multi->children->prepend($info);
 			
 			// ADD THE CLASS TO THE INPUT FIELD 
 			// CHANGE THE LABEL TO INCLUDE THE COUNT. 
-			$multi->children->each(function($child) {
-				$child->addClass('fb-multiplier-orig-field');
-				if($child->label) $child->label .= " [#1]";
-			    if($child->name) $child->name .= "_1";
-				//if($child->id) $child->id .= "_1";
-				//echo $child->name;
+			if(!$preventDuplicates) {
+				$multi->children->each(function($child) {
+					$child->addClass('fb-multiplier-orig-field');
+					$child->addClass('label');
+					if($child->label && $child->attr('name') == "rowHead") $child->label .= " [#1]";
+					if($child->name) $child->name .= "_1";
 
-			});
+				});
+			};
 			
 			$mname = $multi->name; //NAME OF THE FIELDSET
 			$multiCount = $this->input->post->{$mname . "__multiplier_rows"} ?: 1; // COUNT THE CURRENT ROWS
@@ -169,30 +215,43 @@ class FormBuilderMultiplier extends WireData implements Module {
 			
 			$children = $multi->children()->getArray();
 
-			$hid = $this->modules->get("InputfieldHidden");
-			$hid->attr('id+name', $mname . "__multiplier_rows");
-			$hid->attr('data-multiply-limit', $multi->multiplyLimit);
-			$hid->attr('value', $multiCount);
-			$multi->insertBefore($hid, $multi->children->first());
+			if(!$preventDuplicates) {
+				$hid = $this->modules->get("InputfieldHidden");
+				$hid->attr('id+name', $mname . "__multiplier_rows");
+				$hid->attr('data-multiply-limit', $multi->multiplyLimit);
+				$hid->attr('value', $multiCount);
+				$multi->insertBefore($hid, $multi->children->first());
+			}
 
 			if($multiCount && $multiCount > 1) {
 				for($c = 1; $c < $multiCount; $c++) {
 					$this->cloneFields($children, $multi, $c);
 				}
+				// Add class for skipping fieldgroup if it's cloned allready
+				$multi->addClass('fb-multiplier-cloned');
 			}
 
 
 
 			if(! $this->noButtons) {
-				$btn = $this->modules->get("InputfieldMarkup");
-				$classes = "uk-button uk-button-small uk-button-primary fb-multiplier-add-row";
-				$btnname = "btn_multiy__$mname";
-				$btn->attr('value', "<button class='$classes' name='$btnname' data-multiply='$mname' data-multiply-limit='" . intVal($multi->multiplyLimit) . "'>" . $multi->multiplyLabel . "</button>");
-				$multi->append($btn);
+
+				$mulitplyLabel = $multi->get('multiplyLabel'.$lang);
+				$removeLabel = $multi->get('removeLabel'.$lang);
+
+				$btns = $this->modules->get("InputfieldMarkup");
+				$btns->columnWidth(100);
+				$btns->attr('value', "
+					<button class='uk-button uk-button-small uk-button-primary fb-multiplier-button fb-multiplier-add-row' name='btn_multiy__$mname' data-multiply='$mname' data-multiply-limit='" . intVal($multi->multiplyLimit) . "'>
+						<span data-uk-icon='icon: plus; ratio: 0.75;'></span> " . $mulitplyLabel . "
+					</button>
+					<button class='uk-button uk-button-small uk-button-danger fb-multiplier-button fb-multiplier-remove-row' name='btn_remove__$mname' data-remove='$mname'>
+						<span data-uk-icon='icon: minus; ratio: 0.75;'></span> " . $removeLabel . "
+					</button>
+					
+					");
+				$multi->append($btns);
+
 			}
-
-
-		    $this->log->save('fbmultiplier', "Finished the adjustments " . $multi->name);
 
 		}		
 	}
@@ -203,8 +262,11 @@ class FormBuilderMultiplier extends WireData implements Module {
 	 */
 	protected function cloneFields($fields, $fieldgroup, $counter) {
 		foreach($fields as $f) {
+			// Skip if fieldgroup is cloned allready
+			if($fieldgroup->hasClass('fb-multiplier-cloned') ) continue;
 			$fNew = clone($f);
 			$fNew->removeClass('fb-multiplier-orig-field');
+			$fNew->wrapClass('fb-multiplier-cloned-field-'.intVal( $counter +1 ));
 			if($fNew->attr("id")) {
 				$fNew->attr("id", preg_replace_callback('/^([^"]+_)(\d+)$/', function($match) use($counter) {
 					$propVal = $match[1] . (intVal($match[2]) + $counter);
@@ -249,13 +311,12 @@ class FormBuilderMultiplier extends WireData implements Module {
 			});
 						
 			$children = $multi->children()->getArray();
-			//print_r($children);
 
 			$hid = $this->modules->get("InputfieldHidden");
 			$hid->attr('id+name', $mname . "__multiplier_rows");
 			$hid->attr('data-multiplier-limit', $multi->multiplyLimit);
 			$hid->attr('value', $multiCount);
-			$hid->label = _("Number of rows");
+			$hid->label = $this->_("Number of rows");
 			$multi->insertBefore($hid, $multi->children->first());
 
 			if($multiCount && $multiCount > 1) {
