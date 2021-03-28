@@ -148,7 +148,7 @@ class FormBuilderMultiplier extends WireData implements Module {
 			$f->attr('value', $this->editingField->removeLabel ?: 'Delete row');
 			$f->description = $this->_("Label of button to delete the last row.");
 			$f->columnWidth = 25;
-			$f->showIf = "multiplyGroup=1";
+      $f->showIf = "multiplyGroup=1";
 			$f->useLanguages = true;
 			
 			$event->return->append($f);
