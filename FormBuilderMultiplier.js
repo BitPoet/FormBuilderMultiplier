@@ -23,7 +23,7 @@ $(document).ready(function() {
 	}
 	
 	/**
-	 * Attach click listener to all "Add row" buttons
+	 * Attach click listener Buttons
 	 */
 	$('button.fb-multiplier-add-row').each(function(idx, el) {
 		var mname = $(el).data('multiply');
@@ -36,10 +36,11 @@ $(document).ready(function() {
 		 * CSS class.
 		 */
 		var $tpl = $('<div/>');
-		$inner.children('div.Inputfield:has(input.fb-multiplier-orig-field), div.Inputfield:has(select.fb-multiplier-orig-field), div.Inputfield:has(textarea.fb-multiplier-orig-field)').clone().each(function(ind, fld) {
+		$inner.children('div.fb-multiplier-orig-field.label, div.Inputfield:has(input.fb-multiplier-orig-field), div.Inputfield:has(select.fb-multiplier-orig-field), div.Inputfield:has(textarea.fb-multiplier-orig-field)').clone().each(function(ind, fld) {
 			$(fld).find('input, select, textarea').removeClass('fb-multiplier-orig-field');
 			$tpl.append(fld);
 		});
+
 		var rowTpl = $tpl.html();
 
 		var $counter = $('#' + mname + '__multiplier_rows').first();
@@ -50,9 +51,9 @@ $(document).ready(function() {
 		$(el).click(function(evt) {
 			evt.preventDefault();
 			
-			var curTpl = '' + rowTpl;
-			
 			var curCnt = parseInt($counter.val());
+
+			var curTpl = '' + '<div class="multiplier_clone InputfieldContent uk-form-controls" data-count-' + parseInt(curCnt + 1) +'>' + rowTpl + '</div>';
 
 			var rowLimit = parseInt($(el).data('multiply-limit'));
 			if(isNaN(rowLimit)) rowLimit = 0;
@@ -83,18 +84,49 @@ $(document).ready(function() {
 			});
 
 			var $new = $(curTpl);
+
+			// Empty created fields
+			$($new).find('input, select, textarea').val('');
 			
-			$new.insertBefore($(el));
+			// Clear possible errors on fields
+			$($new).find('p.uk-text-danger').remove();
+			
+			$new.insertBefore($(el).closest('.Inputfield'));
 			
 			$counter.val(1 + curCnt);
 
 			if(rowLimit != 0 && curCnt == rowLimit - 1) {
 				$(el).addClass('uk-button-danger');
 			}
+			$(el).closest('.Inputfields').find('button.fb-multiplier-remove-row').prop('disabled',false);
 
 			$(window).trigger("resize");
 		});
-	});
-	
-});
 
+		/**
+		 * Attach click listener to all "Remove row" buttons
+		 */
+		$('button.fb-multiplier-remove-row').each(function(idx, el) {
+
+			var curCnt = parseInt($counter.val());
+			if(curCnt < 2) { $(el).prop('disabled', true);};
+
+			$(el).click(function(evt) {
+				evt.preventDefault();
+				var curCnt = parseInt($counter.val());
+				if(curCnt===1) {
+					return false;
+				}
+				if(curCnt===2) {
+					$(el).prop('disabled',true)
+				};
+				// Remove fields dynamicly created
+				$('.multiplier_clone').last().remove();
+				// Remove fiedls created via PHP
+				$('.fb-multiplier-cloned-field-'+curCnt).remove();
+				$counter.val(curCnt - 1);
+				$(window).trigger("resize");
+			});
+		});
+	});
+});
