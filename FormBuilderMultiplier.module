@@ -25,7 +25,7 @@ class FormBuilderMultiplier extends WireData implements Module {
 		return [
 			'title'		=>	__("FormBuilder Fieldset Multiplier", __FILE__),
 			'summary'	=>	__("Allows Repeater-like multiplying of fieldsets in FormBuilder forms in the frontend", __FILE__),
-			'version'	=>	'0.0.9',
+			'version'	=>	'0.0.10',
 			'requires'	=>	array("FormBuilder"),
 			'autoload'	=>	true,
 		];
@@ -144,8 +144,8 @@ class FormBuilderMultiplier extends WireData implements Module {
 
 			$f = $this->modules->get("InputfieldText");
 			$f->attr('name', 'removeLabel');
-			$f->label = $this->_("Label \"Delete row\"");
-			$f->attr('value', $this->editingField->removeLabel ?: 'Delete row');
+			$f->label = $this->_("Label \"Delete last row\"");
+			$f->attr('value', $this->editingField->removeLabel ?: 'Delete last row');
 			$f->description = $this->_("Label of button to delete the last row.");
 			$f->columnWidth = 25;
       $f->showIf = "multiplyGroup=1";
