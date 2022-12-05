@@ -22,5 +22,8 @@ The labels and names of such enabled fields are suffixed with an underscore and 
 # Screencast
 ![Screencast/Gif](http://bitpoet.github.io/img/FBMulitplier.gif)
 
+## Thanks
+Big thanks to viergg-jfc for language support, remove row functionality and bugfixes.
+
 # License
 Released under Mozilla Public License (MPL) v2. You can read the full text [here](https://github.com/BitPoet/FormBuilderMultiplier/raw/master/LICENSE) or open the "LICENSE" file included in your download of this module.
