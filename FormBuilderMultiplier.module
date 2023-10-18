@@ -19,13 +19,13 @@
  * Licensed under MPL v2
  *
  */
-class FormBuilderMultiplier extends WireData implements Module {
+class FormBuilderMultiplier extends WireData implements Module, ConfigurableModule {
 
 	public static function getModuleInfo() {
 		return [
 			'title'		=>	__("FormBuilder Fieldset Multiplier", __FILE__),
 			'summary'	=>	__("Allows Repeater-like multiplying of fieldsets in FormBuilder forms in the frontend", __FILE__),
-			'version'	=>	'0.0.10',
+			'version'	=>	'0.0.11',
 			'requires'	=>	array("FormBuilder"),
 			'autoload'	=>	true,
 		];
@@ -52,8 +52,11 @@ class FormBuilderMultiplier extends WireData implements Module {
 
 
     public function addScripts($event) {
-		$page = $event->object; 
-		if($page->template == 'admin') return;
+		$page = $event->object;
+		if(!empty($this->excludeTemplates) && in_array($page->template->name, $this->excludeTemplates))
+			return;
+		if($page->template == 'admin')
+			return;
         $additionalHeadScripts = '<script type="text/javascript" src="' . wire('config')->urls->{$this->className()} . 'FormBuilderMultiplier.js"></script>';
 		$event->return = str_replace("</head>", $additionalHeadScripts.'</head>', $event->return); 
 	}
@@ -380,5 +383,30 @@ class FormBuilderMultiplier extends WireData implements Module {
 		}
 		
 	}
-	
+
+
+	/**
+	 * Config inputfields
+	 *
+	 * @param InputfieldWrapper $inputfields
+	 */
+	public function getModuleConfigInputfields(InputfieldWrapper $inputfields) {
+		
+		$f = $this->modules->get("InputfieldAsmSelect");
+		$f->label = $this->_('Templates to ignore');
+		$f->description = $this->_('FormBuilderMultiplier injects a script tag into the page header. If you do not want this to happend in certain templates, select them here.');
+		$f->attr('name', 'excludeTemplates');
+		$selTemplates = $this->excludeTemplates ?: [];
+		foreach($this->templates as $tpl) {
+			$attrs = [];
+			if(in_array($tpl->name, $selTemplates))
+				$attrs['selected'] = 'selected';
+			$f->addOption($tpl->name, $tpl->name, $attrs);
+		}
+		$f->attr('value', $this->exclueTemplates);
+		
+		$inputfields->append($f);
+		
+		return $inputfields;
+	}	
 }
