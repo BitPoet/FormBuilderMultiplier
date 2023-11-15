@@ -5,7 +5,7 @@
 Compatible with ProcessWire 3.x
 
 # Status
-alpha - feedback welcome
+beta - use with caution
 
 # Description
 This module is an extension to the commercial FormBuilder module and adds a multiplication option to fieldsets so the user can add and fill in multiple sets of the contained fields (think "Repeater light" in ProcessWire terms).
@@ -21,6 +21,9 @@ The labels and names of such enabled fields are suffixed with an underscore and 
 
 # Screencast
 ![Screencast/Gif](http://bitpoet.github.io/img/FBMulitplier.gif)
+
+# Script tag
+FormBuilderMultiplier injects a script tag into every page header so it can multiply fields as necessary. You may want to suppress that happening for certain templates. You can do so in the module's configuration.
 
 ## Thanks
 Big thanks to viergg-jfc for language support, remove row functionality and bugfixes.
